@@ -152,34 +152,54 @@
         let selectedCell = null;
 
         grid.addEventListener('click', (e) => {
-            const cell = e.target;
-            if (!cell.classList.contains('cell')) return;
+        const cell = e.target;
+        if (!cell.classList.contains('cell')) return;
 
-            const row = cell.getAttribute('data-row');
-            const col = cell.getAttribute('data-col');
+        const row = cell.getAttribute('data-row');
+        const col = cell.getAttribute('data-col');
 
-            fetch('/get_direction', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ x: parseInt(row), y: parseInt(col) })
-            })
-                .then((res) => res.json())
-                .then((data) => {
-                    // Update the cell color
-                    cell.style.backgroundColor = data.color;
+        // Update selected cell globally
+        selectedCell = { x: parseInt(row), y: parseInt(col) };
+        console.log('Selected cell:', selectedCell); // Debugging purpose
 
-                    // Show the hint dynamically
-                    hintElement.textContent = `The ghost is to the ${data.direction}!`;
-                    scoreElement.textContent = data.score;
+        fetch('/get_direction', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ x: parseInt(row), y: parseInt(col) })
+        })
+            .then((res) => res.json())
+            .then((data) => {
+                // Update the cell color
+                cell.style.backgroundColor = data.color;
 
-                    if (data.game_over) {
-                        showMessage('Game Over! You cant move anymore :(', '/static/lose.mp3');
-                    }
-                    // Update the selected cell for bust attempts
-                    selectedCell = { x: parseInt(row), y: parseInt(col) };
-                });
+                // Show the hint dynamically
+                hintElement.textContent = `The ghost is to the ${data.direction}!`;
+                scoreElement.textContent = data.score;
 
-        });
+                if (data.game_over) {
+                showMessage ('Game Over ! You are out of moves :(', '/static/lose.mp3');
+                setTimeout(() => location.reload(), 5000); // Reset game after 5 seconds
+                }
+
+                // Fetch and update probabilities if "View Probabilities" is active
+                if (showProbabilities) {
+                    fetch('/get_probabilities', { method: 'GET' })
+                        .then((res) => res.json())
+                        .then((probabilities) => {
+                            const cells = document.querySelectorAll('.cell');
+                            cells.forEach((cell) => {
+                                const row = parseInt(cell.getAttribute('data-row'));
+                                const col = parseInt(cell.getAttribute('data-col'));
+                                const probability = probabilities[row][col];
+                                cell.textContent = `${probability.toFixed(2)}%`; // Display as percentage
+                            });
+                        });
+                }
+            });
+});
+
+
+
 
         bustButton.addEventListener('click', () => {
         if (!selectedCell) {
@@ -214,30 +234,27 @@
     });
 
 
-        toggleProbabilitiesButton.addEventListener('click', () => {
+    toggleProbabilitiesButton.addEventListener('click', () => {
     fetch('/toggle_probabilities', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
     })
         .then((res) => res.json())
         .then((data) => {
-            toggleProbabilitiesButton.textContent = data.show_probabilities ? 'Hide Probabilities' : 'View Probabilities';
+            showProbabilities = data.show_probabilities; // Update state
+            toggleProbabilitiesButton.textContent = showProbabilities ? 'Hide Probabilities' : 'View Probabilities';
 
-            if (data.show_probabilities) {
-                // Fetch probabilities and display them on the grid
-                fetch('/get_probabilities', {
-                    method: 'GET',
-                    headers: { 'Content-Type': 'application/json' },
-                })
+            if (showProbabilities) {
+                // Fetch and display probabilities
+                fetch('/get_probabilities', { method: 'GET' })
                     .then((res) => res.json())
                     .then((probabilities) => {
-                        // Update each cell with its probability
                         const cells = document.querySelectorAll('.cell');
                         cells.forEach((cell) => {
                             const row = parseInt(cell.getAttribute('data-row'));
                             const col = parseInt(cell.getAttribute('data-col'));
                             const probability = probabilities[row][col];
-                            cell.textContent = probability.toFixed(2); // Show up to 2 decimal places
+                            cell.textContent = `${probability.toFixed(2)}%`; // Display as percentage
                         });
                     });
             } else {
@@ -249,6 +266,8 @@
             }
         });
 });
+
+
 
 resetButton.addEventListener('click', () => {
     fetch('/reset_game', {

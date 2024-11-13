@@ -19,20 +19,6 @@ reset_game_variables()
 
 show_probabilities = False
 
-
-# Helper function to determine direction
-def direction_sense(x, y):
-    gx, gy = ghost_location
-    if x < gx:
-        return "south"
-    elif x > gx:
-        return "north"
-    elif y < gy:
-        return "east"
-    else:
-        return "west"
-
-# Helper function to update probabilities
 def update_posterior_probabilities(x, y, color, direction):
     global probabilities
 
@@ -43,7 +29,7 @@ def update_posterior_probabilities(x, y, color, direction):
             dist = abs(row - x) + abs(col - y)
             direction_match = (direction == direction_sense(row, col))
             
-            # Probability updates based on distance and direction
+            # Probability updates
             if dist == 0 and color == "red":
                 probabilities[row][col] *= 0.9 if direction_match else 0.1
             elif dist <= 2 and color == "orange":
@@ -59,27 +45,44 @@ def update_posterior_probabilities(x, y, color, direction):
 
     print("Probabilities after update:", probabilities)
 
+
 @app.route('/')
 def index():
     return render_template('index.html', grid_rows=grid_rows, grid_cols=grid_cols, initial_score=score, bust_attempts=bust_attempts)
 
+def direction_sense(x, y):
+    gx, gy = ghost_location
+    if x < gx:
+        return "south"
+    elif x > gx:
+        return "north"
+    elif y < gy:
+        return "east"
+    else:
+        return "west"
+    
 @app.route('/get_direction', methods=['POST'])
 def get_direction():
     global score, probabilities
 
-    # Extract the clicked coordinates from the request
     data = request.json
     x, y = data['x'], data['y']
     
     if score <= 0:
         return jsonify({'message': 'No score left! You lose!', 'game_over': True, 'success': False})
 
-    # Reduce the score
     score -= 1
 
-    # Calculate the direction and distance
     gx, gy = ghost_location
-    direction = direction_sense(x, y)
+    direction = ''
+    if x < gx:
+        direction = 'south'
+    elif x > gx:
+        direction = 'north'
+    elif y < gy:
+        direction = 'east'
+    else:
+        direction = 'west'
 
     distance = abs(x - gx) + abs(y - gy)
     color = 'green'
@@ -90,12 +93,10 @@ def get_direction():
     elif distance <= 4:
         color = 'yellow'
 
-    # Update probabilities dynamically
+    # Update probabilities
     update_posterior_probabilities(x, y, color, direction)
 
-    # Debugging log to ensure the probabilities are updated
-    print(f"Clicked on ({x}, {y}), Color: {color}, Direction: {direction}")
-    print(f"Updated Probabilities: {probabilities}")
+    print(f"After move: ({x}, {y}) -> Updated probabilities: {probabilities}")
 
     return jsonify({'direction': direction, 'color': color, 'score': score})
 
@@ -124,6 +125,8 @@ def attempt_bust():
 def get_probabilities():
     print("Probabilities sent to frontend:", probabilities)
     return jsonify(probabilities)
+
+
 
 @app.route('/toggle_probabilities', methods=['POST'])
 def toggle_probabilities():
