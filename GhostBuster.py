@@ -12,7 +12,7 @@ grid_cols = 13
 initial_score = 10  # You can adjust this value
 bust_attempts = 2
 
-# Random ghost location (row, col) - initially unknown to the player
+# Random ghost location (row, col)
 ghost_location = (random.randint(0, grid_rows - 1), random.randint(0, grid_cols - 1))
 
 # Track probabilities and scores
@@ -86,8 +86,7 @@ def on_grid_click(x, y):
 def update_posterior_probabilities(x, y, color, direction):
     global probabilities
 
-    # Here, we would implement Bayesian updating based on both distance (color) and direction.
-    # For simplicity, we use placeholders and normalization for now.
+    # Here, we implement Bayesian updating based on both distance (color) and direction.
     for row in range(grid_rows):
         for col in range(grid_cols):
             dist = abs(row - x) + abs(col - y)

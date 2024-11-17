@@ -191,7 +191,7 @@
                                 const row = parseInt(cell.getAttribute('data-row'));
                                 const col = parseInt(cell.getAttribute('data-col'));
                                 const probability = probabilities[row][col];
-                                cell.textContent = `${probability.toFixed(2)}%`; // Display as percentage
+                                cell.textContent = `${probability.toFixed(2)}`; // Display as percentage
                             });
                         });
                 }
@@ -254,7 +254,7 @@
                             const row = parseInt(cell.getAttribute('data-row'));
                             const col = parseInt(cell.getAttribute('data-col'));
                             const probability = probabilities[row][col];
-                            cell.textContent = `${probability.toFixed(2)}%`; // Display as percentage
+                            cell.textContent = `${probability.toFixed(2)}`; // Display as percentage
                         });
                     });
             } else {
