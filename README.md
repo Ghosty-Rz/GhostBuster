@@ -1,5 +1,5 @@
 # GhostBuster
-A game that uses a probabilistic agent
+A game that uses probabilistic inference
 
 Demo: https://www.youtube.com/watch?v=Ffp9_CR9NC0
 
