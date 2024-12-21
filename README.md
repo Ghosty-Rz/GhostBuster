@@ -1,4 +1,5 @@
 # GhostBuster
+A game that uses a probabilistic agent
 
 Demo: https://www.youtube.com/watch?v=Ffp9_CR9NC0
 
